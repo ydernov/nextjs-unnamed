@@ -3,19 +3,14 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { Loader2 } from "lucide-react";
 import {
-  ComponentProps,
   ComponentPropsWithRef,
   ElementType,
-  FC,
-  HTMLAttributes,
-  JSXElementConstructor,
-  ReactElement,
-  ReactNode,
   forwardRef,
+  HTMLAttributes,
+  ReactNode,
 } from "react";
 import { twMerge } from "tailwind-merge";
 import { Ripple } from "../Ripple";
-import Link from "next/link";
 
 const variants = cva(
   [
