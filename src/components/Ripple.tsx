@@ -14,16 +14,6 @@ type RippleRef = {
   transitionFn: (() => void) | null;
 };
 
-const calcRadius = (
-  centerX: number,
-  centerY: number,
-  cornerX: number,
-  cornerY: number
-) =>
-  Math.ceil(
-    Math.sqrt(Math.pow(cornerX - centerX, 2) + Math.pow(cornerY - centerY, 2))
-  );
-
 export const Ripple: FC<React.SVGProps<SVGSVGElement>> = ({
   onMouseDown,
   onMouseUp,
@@ -41,7 +31,7 @@ export const Ripple: FC<React.SVGProps<SVGSVGElement>> = ({
     clientX,
     clientY,
   }) => {
-    // prevent ripple spam
+    // only on main mouse button (leftclick)
     if (button === 0) {
       const { x, y, width, height } = currentTarget.getBoundingClientRect();
 
@@ -49,13 +39,8 @@ export const Ripple: FC<React.SVGProps<SVGSVGElement>> = ({
       const cx = clientX - x;
       const cy = clientY - y;
 
-      // ripple radius is the distance between cx cy and the most distant corner's x and y (local coords)
-      const r = Math.max(
-        calcRadius(cx, cy, 0, 0),
-        calcRadius(cx, cy, width, 0),
-        calcRadius(cx, cy, 0, height),
-        calcRadius(cx, cy, width, height)
-      );
+      // use smart maths to calculate the distance to the farthest corner
+      const r = Math.hypot(Math.max(cx, width - cx), Math.max(cy, height - cy));
 
       rippleRefs.current.push({
         timeStamp,
@@ -64,6 +49,7 @@ export const Ripple: FC<React.SVGProps<SVGSVGElement>> = ({
         transitionFn: null,
       });
 
+      // prevent ripple spam
       if (ripples.length > 10) {
         rippleRefs.current.shift();
         ripplesSet(([_, ...rest]) =>
@@ -108,6 +94,14 @@ export const Ripple: FC<React.SVGProps<SVGSVGElement>> = ({
     });
   };
 
+  const removeCircleByTimestamp = (timeStamp: number) => {
+    const index = rippleRefs.current.findIndex(
+      (r) => r.timeStamp === timeStamp
+    );
+    index !== -1 && rippleRefs.current.splice(index, 1);
+    ripplesSet((ripples) => ripples.filter((r) => r.timeStamp !== timeStamp));
+  };
+
   const setRippleRef = useCallback(
     (ripple: SVGCircleElement | null, timeStamp: number) => {
       if (ripple !== null) {
@@ -119,39 +113,20 @@ export const Ripple: FC<React.SVGProps<SVGSVGElement>> = ({
           refElem.ref = ripple;
 
           ripple.onanimationend = function (event) {
-            // setTimeout used to push style change to the next browser paint cycle
-
             if (event.animationName === "ripple" && refElem.mouseUp) {
-              // must be equal to animation's 100% keyframe value
-              ripple.classList.add("opacity-5");
-
-              setTimeout(() => {
-                ripple.classList.replace("duration-0", "duration-200");
-                setTimeout(() => {
-                  ripple.classList.replace("opacity-5", "opacity-0");
-                });
-              });
+              removeCircleByTimestamp(timeStamp);
             } else {
-              // must be equal to animation's 100% keyframe value
-              ripple.classList.add("opacity-30");
-
-              setTimeout(() => {
-                ripple.classList.replace("duration-0", "duration-500");
-              });
-
-              refElem.transitionFn = () =>
-                ripple.classList.replace("opacity-30", "opacity-0");
+              ripple.getAnimations().at(0)?.commitStyles();
+              ripple.getAnimations().at(1)?.commitStyles();
+              ripple.classList.remove("[animation-fill-mode:forwards]");
+              refElem.transitionFn = () => {
+                ripple.style.opacity = "0";
+              };
             }
           };
 
           ripple.ontransitionend = function () {
-            const index = rippleRefs.current.findIndex(
-              (r) => r.timeStamp === timeStamp
-            );
-            index !== -1 && rippleRefs.current.splice(index, 1);
-            ripplesSet((ripples) =>
-              ripples.filter((r) => r.timeStamp !== timeStamp)
-            );
+            removeCircleByTimestamp(timeStamp);
           };
         }
       }
@@ -167,8 +142,15 @@ export const Ripple: FC<React.SVGProps<SVGSVGElement>> = ({
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseLeave={hanndleMouseLeave}
-      className={`absolute top-0 left-0 ${className}`}
+      className={`
+        absolute top-0 left-0 ${className} overflow-hidden 
+        [filter:grayscale(0)] transform-gpu
+      `}
       {...props}
+      /*
+        [filter:grayscale(0)] and transform-gpu are here to reduce possible flickering in chrome
+        usually happens with slow ripples over a big container
+      */
     >
       {ripples.map(({ timeStamp, ...props }) => (
         <circle
@@ -177,7 +159,12 @@ export const Ripple: FC<React.SVGProps<SVGSVGElement>> = ({
             setRippleRef(ref, timeStamp);
             return ref;
           }}
-          className="animate-[ripple_0.6s,rippleFill_0.6s] origin-center [transform-box:fill-box] fill-current transition-opacity duration-0 transform-gpu"
+          className={`
+            origin-center [transform-box:fill-box] fill-current opacity-20
+            will-change-[transform, opacity]
+            transition-opacity duration-500
+            animate-[0.6s_ease-in_ripple,0.6s_ease-in_rippleFill] [animation-fill-mode:forwards] 
+          `}
           {...props}
         />
       ))}

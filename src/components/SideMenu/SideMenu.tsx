@@ -12,7 +12,12 @@ const SideMenu = async () => {
   return (
     <aside className="p-4 w-48 flex-none">
       <nav>
-        <Link href={"/"} className="w-full block my-1" tabIndex={-1}>
+        <Link
+          href={"/"}
+          className="w-full block my-1"
+          tabIndex={-1}
+          draggable={false}
+        >
           <Button
             variant={"text"}
             className="px-2 w-full"
@@ -22,7 +27,12 @@ const SideMenu = async () => {
           </Button>
         </Link>
 
-        <Link href={"/ingredients"} className="w-full block my-2" tabIndex={-1}>
+        <Link
+          href={"/ingredients"}
+          className="w-full block my-2"
+          tabIndex={-1}
+          draggable={false}
+        >
           <Button
             variant={"text"}
             className="px-2 w-full"

@@ -16,29 +16,25 @@ module.exports = {
         ripple: {
           "0%": {
             transform: "scale(0)",
-            opacity: "0.2",
           },
 
-          "100%": {
+          "90%": {
             transform: "scale(1)",
-            opacity: "0.05",
+            opacity: "0.02",
+          },
+          "100%": {
+            opacity: "0",
           },
         },
         rippleFill: {
-          "0%": {
-            // animationFillMode: "forwards",
-            // transform: "scale(0)",
-            opacity: "0.1",
-          },
           "100%": {
-            // transform: "scale(1)",
-            opacity: "0.3",
+            opacity: "0.2",
           },
         },
       },
       animation: {
-        ripple: "ripple 0.6s ease-in-out ",
-        rippleFill: "rippleFill 0.6s ease-in-out ",
+        ripple: "0.6s ease-in-out forwards ripple",
+        rippleFill: "0.6s ease-in-out forwards rippleFill",
       },
     },
   },

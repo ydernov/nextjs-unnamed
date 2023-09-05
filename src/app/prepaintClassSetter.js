@@ -1,4 +1,5 @@
 export const init = `
+(function() {
     const themeValue = localStorage?.theme;
     if (typeof window !== "undefined") {
         if (
@@ -9,6 +10,7 @@ export const init = `
 
             document.documentElement.classList.add("dark");
         } else {
-             document.documentElement.classList.remove("dark");
+            document.documentElement.classList.remove("dark");
         }
-    }`;
+    }
+})()`;

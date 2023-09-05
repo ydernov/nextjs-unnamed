@@ -35,7 +35,7 @@ function ThemeSwitcher() {
 
           <Menu.Items
             as="div"
-            className="absolute right-2 w-40 filter bg-slate-50/60 px-1 rounded-md shadow-md mt-2 dark:bg-slate-50/10"
+            className="absolute right-2 w-40 filter bg-slate-50/60 px-1 rounded-md shadow-md mt-2 dark:bg-slate-50/10 z-[100]"
             autoFocus
           >
             {themes.map(({ value, icon }) => (
